@@ -1,0 +1,372 @@
+import pandas as pd
+
+def preprocess_claim_data(filepath):
+    df = pd.read_csv(filepath)
+    df = df.fillna("/content/insurance_claims.csv")
+    return df
+
+def extract_relevant_fields(df):
+    columns = [
+        'total_claim_amount',
+        'number_of_vehicles_involved',
+        'bodily_injuries',
+        'witnesses',
+        'injury_claim',
+        'property_claim'
+    ]
+    return df[[col for col in columns if col in df.columns]]
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+import joblib
+
+def train_complexity_model(df):
+    df['complexity'] = (
+        (df['total_claim_amount'] > 25000) |
+        (df['number_of_vehicles_involved'] > 1) |
+        (df['bodily_injuries'] > 0)
+    ).astype(int)
+
+    features = [
+        'total_claim_amount',
+        'number_of_vehicles_involved',
+        'bodily_injuries'
+    ]
+
+    X = df[features]
+    y = df['complexity']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    model = DecisionTreeClassifier(max_depth=4, random_state=42)
+    model.fit(X_train, y_train)
+
+    y_pred = model.predict(X_test)
+    print(classification_report(y_test, y_pred))
+
+    joblib.dump(model, "/mnt/data/complexity_classifier.joblib")
+    return model
+
+
+import joblib
+import numpy as np
+
+def load_model(model_path="/mnt/data/complexity_classifier.joblib"):
+    return joblib.load(model_path)
+
+def route_claim(model, claim_features):
+    prediction = model.predict([claim_features])[0]
+    score = model.predict_proba([claim_features])[0][1]
+
+    if prediction == 0:
+        return "✅ Auto-Processed"
+    else:
+        return f"🛠️ Routed to Human Review (Priority Score: {score:.2f})"
+
+
+
+import pandas as pd
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+import joblib
+import numpy as np
+
+def preprocess_claim_data(filepath):
+    df = pd.read_csv(filepath)
+    df = df.fillna("Unknown")
+    return df
+
+def extract_relevant_fields(df):
+    fields = ['total_claim_amount', 'number_of_vehicles_involved', 'bodily_injuries']
+    return df[[f for f in fields if f in df.columns]]
+
+def train_complexity_model(df):
+    df['complexity'] = ((df['total_claim_amount'] > 25000) |
+                        (df['number_of_vehicles_involved'] > 1) |
+                        (df['bodily_injuries'] > 0)).astype(int)
+
+    features = ['total_claim_amount', 'number_of_vehicles_involved', 'bodily_injuries']
+    X = df[features]
+    y = df['complexity']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    model = DecisionTreeClassifier(max_depth=4, random_state=42)
+    model.fit(X_train, y_train)
+
+    y_pred = model.predict(X_test)
+    print(classification_report(y_test, y_pred))
+
+    joblib.dump(model, "/content/complexity_classifier.joblib")
+    return model
+
+def load_model(model_path="/content/complexity_classifier.joblib"):
+    return joblib.load(model_path)
+
+def route_claim(model, claim_features):
+    feature_names = ['total_claim_amount', 'number_of_vehicles_involved', 'bodily_injuries']
+    claim_features_df = pd.DataFrame([claim_features], columns=feature_names)
+    prediction = model.predict(claim_features_df)[0]
+    score = model.predict_proba(claim_features_df)[0][1]
+    return f"Auto-Processed" if prediction == 0 else f"Routed to Human Review (Priority Score: {score:.2f})"
+
+df = preprocess_claim_data("/content/insurance_claims.csv")
+features_df = extract_relevant_fields(df)
+model = train_complexity_model(df)
+
+print("\n=== Routing Decisions ===")
+for idx, row in features_df.head(5).iterrows():
+    decision = route_claim(model, row.values)
+    print(f"Claim {idx + 1}: {decision}")
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv("/content/insurance_claims.csv")
+
+df['complexity'] = ((df['total_claim_amount'] > 25000) |
+                    (df['number_of_vehicles_involved'] > 1) |
+                    (df['bodily_injuries'] > 0)).astype(int)
+
+sns.set(style="whitegrid")
+
+plt.figure(figsize=(5, 4))
+sns.countplot(x='complexity', data=df, palette='coolwarm')
+plt.xticks([0, 1], ['Simple', 'Complex'])
+plt.title('Claim Complexity Distribution')
+plt.tight_layout()
+plt.show()
+
+plt.figure(figsize=(6, 4))
+sns.boxplot(x='complexity', y='total_claim_amount', data=df, palette='Set3')
+plt.xticks([0, 1], ['Simple', 'Complex'])
+plt.title('Total Claim Amount by Complexity')
+plt.tight_layout()
+plt.show()
+
+
+import os
+
+base_path = "/content/claims-automation-system"
+
+folders = [
+    "preprocessing",
+    "extraction",
+    "classification",
+    "decision_engine",
+    "visualization",
+    "images"
+]
+
+for folder in folders:
+    os.makedirs(os.path.join(base_path, folder), exist_ok=True)
+
+print("✅ Folder structure recreated.")
+
+
+code = '''
+import pandas as pd
+
+def preprocess_claim_data(filepath):
+    df = pd.read_csv(filepath)
+    df = df.fillna("Unknown")
+    return df
+'''
+
+with open("/content/claims-automation-system/preprocessing/preprocess.py", "w") as f:
+    f.write(code.strip())
+
+
+code = '''
+def extract_relevant_fields(df):
+    fields = [
+        'total_claim_amount',
+        'number_of_vehicles_involved',
+        'bodily_injuries',
+        'witnesses',
+        'injury_claim',
+        'property_claim'
+    ]
+    return df[[col for col in fields if col in df.columns]]
+'''
+with open("/content/claims-automation-system/extraction/extract_fields.py", "w") as f:
+    f.write(code.strip())
+
+
+code = '''
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+import joblib
+
+def train_complexity_model(df):
+    df['complexity'] = ((df['total_claim_amount'] > 25000) |
+                        (df['number_of_vehicles_involved'] > 1) |
+                        (df['bodily_injuries'] > 0)).astype(int)
+    
+    features = ['total_claim_amount', 'number_of_vehicles_involved', 'bodily_injuries']
+    X = df[features]
+    y = df['complexity']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    model = DecisionTreeClassifier(max_depth=4, random_state=42)
+    model.fit(X_train, y_train)
+
+    print(classification_report(y_test, model.predict(X_test)))
+    joblib.dump(model, "/content/claims-automation-system/classification/complexity_classifier.joblib")
+
+    return model
+'''
+with open("/content/claims-automation-system/classification/complexity_model.py", "w") as f:
+    f.write(code.strip())
+
+
+code = '''
+import joblib
+
+def load_model(model_path="/content/claims-automation-system/classification/complexity_classifier.joblib"):
+    return joblib.load(model_path)
+
+def route_claim(model, claim_features):
+    prediction = model.predict([claim_features])[0]
+    score = model.predict_proba([claim_features])[0][1]
+
+    if prediction == 0:
+        return "✅ Auto-Processed"
+    else:
+        return f"🛠️ Routed to Human Review (Priority Score: {score:.2f})"
+'''
+with open("/content/claims-automation-system/decision_engine/router.py", "w") as f:
+    f.write(code.strip())
+
+
+code = '''
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def visualize_claim_complexity(df):
+    sns.set(style="whitegrid")
+
+    df['complexity'] = ((df['total_claim_amount'] > 25000) |
+                        (df['number_of_vehicles_involved'] > 1) |
+                        (df['bodily_injuries'] > 0)).astype(int)
+
+    # 1. Bar plot
+    plt.figure(figsize=(5, 4))
+    sns.countplot(x='complexity', data=df, palette='coolwarm')
+    plt.xticks([0, 1], ['Simple', 'Complex'])
+    plt.title('Claim Complexity Distribution')
+    plt.tight_layout()
+    plt.savefig("/content/claims-automation-system/images/complexity_distribution.png")
+    plt.close()
+
+    # 2. Boxplot
+    plt.figure(figsize=(6, 4))
+    sns.boxplot(x='complexity', y='total_claim_amount', data=df, palette='Set3')
+    plt.xticks([0, 1], ['Simple', 'Complex'])
+    plt.title('Total Claim Amount by Complexity')
+    plt.tight_layout()
+    plt.savefig("/content/claims-automation-system/images/claim_amount_vs_complexity.png")
+    plt.close()
+'''
+with open("/content/claims-automation-system/visualization/plot_complexity.py", "w") as f:
+    f.write(code.strip())
+
+
+code = '''
+from preprocessing.preprocess import preprocess_claim_data
+from extraction.extract_fields import extract_relevant_fields
+from classification.complexity_model import train_complexity_model
+from decision_engine.router import route_claim
+
+# Load data
+df = preprocess_claim_data("/content/insurance_claims.csv")
+
+# Extract features
+features_df = extract_relevant_fields(df)
+
+# Train model
+model = train_complexity_model(df)
+
+# Route a few sample claims
+for idx, row in features_df.head(5).iterrows():
+    print(f"Claim {idx+1}: {route_claim(model, row.values)}")
+'''
+with open("/content/claims-automation-system/main_pipeline.py", "w") as f:
+    f.write(code.strip())
+
+
+readme = '''
+# Claims Processing Automation
+
+## 🚀 Overview
+Automatically processes simple insurance claims and prioritizes complex ones for human review.
+
+## 🧠 Features
+- ML-based complexity classification using decision trees
+- Modular architecture for preprocessing, extraction, classification, and routing
+- Visual insights into claim complexity distribution
+- GitHub-ready folder structure and codebase
+
+## 🧱 Project Structure
+- `main_pipeline.py` — Main script to run the end-to-end pipeline
+- `preprocessing/` — Data cleaning and preparation
+- `extraction/` — Feature extraction from the dataset
+- `classification/` — ML training and model saving
+- `decision_engine/` — Routing logic based on prediction
+- `visualization/` — Plotting claim complexity insights
+- `images/` — Stores saved plots
+
+## ▶️ How to Run
+
+1. Install dependencies:
+
+    pip install -r requirements.txt
+
+2. Run the pipeline:
+
+    python main_pipeline.py
+
+## 📊 Output
+- Classification report printed to console
+- Sample routing decisions for 5 claims
+- Plots saved to `/images/`:
+  - `complexity_distribution.png`
+  - `claim_amount_vs_complexity.png`
+
+## 📁 Dataset Used
+insurance_claims.csv (uploaded manually to Colab or your environment)
+
+## ✅ Author
+Your Name
+'''
+
+# Save the README file
+with open("/content/claims-automation-system/README.md", "w") as f:
+    f.write(readme.strip())
+
+print("✅ README.md file created successfully.")
+
+
+req = """
+pandas
+scikit-learn
+matplotlib
+seaborn
+joblib
+"""
+
+with open("/content/claims-automation-system/requirements.txt", "w") as f:
+    f.write(req.strip())
+
+print("✅ requirements.txt created successfully.")
+
+
+!cd /content && zip -r claims_automation.zip claims-automation-system
+
+from google.colab import files
+files.download("/content/claims_automation.zip")
