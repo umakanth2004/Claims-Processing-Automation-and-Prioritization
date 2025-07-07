@@ -36,7 +36,7 @@ Automatically processes simple insurance claims and prioritizes complex ones for
   - `claim_amount_vs_complexity.png`
 
 ## 📁 Dataset Used
-insurance_claims.csv (uploaded manually to Colab or your environment)
+insurance_claims.csv 
 
 ## ✅ Author
-Your Name
+MUNNURU UMAKANTH
